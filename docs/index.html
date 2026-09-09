@@ -29,12 +29,32 @@
   <h2>Install</h2>
   <pre><code>npm install app-20-llmchat</code></pre>
 
-  <h2>Usage</h2>
-  <pre><code>import { LLMChat } from 'app-20-llmchat'
+  <h2>Example</h2>
+  <p>A minimal chat with 3 components:</p>
+  <pre><code>import { useState } from 'react'
+import { LLMChat } from 'app-20-llmchat'
 
-function ChatView() {
+export default function App() {
+  const [messages, setMessages] = useState([])
+  const [draft, setDraft] = useState('')
+  const [status, setStatus] = useState('idle')
+
+  const handleSend = () =&gt; {
+    if (!draft.trim()) return
+    setMessages(prev =&gt; [...prev, { id: Date.now(), role: 'user', content: draft }])
+    setDraft('')
+  }
+
   return (
-    &lt;LLMChat.Root messages={messages} onSend={handleSend}&gt;
+    &lt;LLMChat.Root
+      messages={messages}
+      draft={draft}
+      status={status}
+      onChangeDraft={setDraft}
+      onSubmit={handleSend}
+      onStop={() =&gt; {}}
+      onLoadEarlier={() =&gt; {}}
+    &gt;
       &lt;LLMChat.Conversation /&gt;
       &lt;LLMChat.PromptInput /&gt;
     &lt;/LLMChat.Root&gt;
