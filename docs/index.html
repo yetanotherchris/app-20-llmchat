@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>app-20-llmchat</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 2rem; }
+    h1 { margin-bottom: 1rem; }
+    h2 { margin-top: 2rem; margin-bottom: 0.5rem; }
+    a { color: #0366d6; }
+    code { background: #f6f8fa; padding: 0.2em 0.4em; border-radius: 3px; font-size: 85%; }
+    pre { background: #f6f8fa; padding: 1rem; border-radius: 6px; overflow-x: auto; margin: 1rem 0; }
+    pre code { padding: 0; background: none; }
+    ul { margin-left: 1.5rem; margin-bottom: 1rem; }
+    li { margin-bottom: 0.25rem; }
+  </style>
+</head>
+<body>
+  <h1>app-20-llmchat</h1>
+  <p>React component library for LLM chat interfaces.</p>
+
+  <h2>Documentation</h2>
+  <ul>
+    <li><a href="quick-start.html">Quick Start</a></li>
+    <li><a href="migration-guide.html">Migration Guide</a></li>
+  </ul>
+
+  <h2>Install</h2>
+  <pre><code>npm install app-20-llmchat</code></pre>
+
+  <h2>Usage</h2>
+  <pre><code>import { LLMChat } from 'app-20-llmchat'
+
+function ChatView() {
+  return (
+    &lt;LLMChat.Root messages={messages} onSend={handleSend}&gt;
+      &lt;LLMChat.Conversation /&gt;
+      &lt;LLMChat.PromptInput /&gt;
+    &lt;/LLMChat.Root&gt;
+  )
+}</code></pre>
+
+  <h2>Components</h2>
+  <ul>
+    <li><code>LLMChat.Root</code> - Main container</li>
+    <li><code>LLMChat.Conversation</code> - Message list</li>
+    <li><code>LLMChat.PromptInput</code> - Text input</li>
+    <li><code>LLMChat.Bubble</code> - Message bubble</li>
+    <li><code>LLMChat.Status</code> - Status badge</li>
+    <li><code>LLMChat.SendButton</code> - Send button</li>
+    <li><code>LLMChat.StopButton</code> - Stop button</li>
+    <li><code>LLMChat.ScrollToLatest</code> - Scroll control</li>
+    <li><code>LLMChat.LoadEarlier</code> - Load more</li>
+    <li><code>LLMChat.UnreadBadge</code> - Unread count</li>
+    <li><code>LLMChat.EmptyState</code> - Empty state</li>
+    <li><code>LLMChat.LoadingState</code> - Loading</li>
+    <li><code>LLMChat.TypingState</code> - Typing indicator</li>
+    <li><code>LLMChat.ErrorState</code> - Error state</li>
+  </ul>
+
+  <p><a href="https://github.com/yetanotherchris/app-20-llmchat">GitHub</a></p>
+</body>
+</html>
