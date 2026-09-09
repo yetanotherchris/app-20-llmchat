@@ -4,7 +4,7 @@
 
 **Created**: 2026-09-08
 
-**Status**: Draft
+**Status**: Archived
 
 **Input**: User request: "I want to make documentation for the react component, so this spec should be after 007." The documentation is to match the characteristics of the best single-component open-source documentation: quick time to productivity, live interactive examples, clear reference tables, practical recipes, accessibility notes, and minimal fluff.
 

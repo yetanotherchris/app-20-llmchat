@@ -4,7 +4,7 @@
 
 **Created**: 2026-09-09
 
-**Status**: Draft
+**Status**: Archived
 
 **Input**: User request: "I want to rename the React component to LLMChat and move it to a new repository. The new repo is https://github.com/yetanotherchris/app-20-llmchat. The component should follow React naming conventions with dot notation for sub-components."
 
