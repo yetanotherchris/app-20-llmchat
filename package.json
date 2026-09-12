@@ -1,6 +1,6 @@
 {
   "name": "app-20-llmchat",
-  "version": "1.0.3",
+  "version": "1.0.0",
   "private": false,
   "description": "React component library for LLM chat interfaces",
   "main": "dist/index.js",
