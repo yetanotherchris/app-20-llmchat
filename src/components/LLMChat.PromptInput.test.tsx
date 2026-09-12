@@ -23,6 +23,16 @@ describe('Composer', () => {
     expect(screen.getByTestId('chat.composer.send')).toBeInTheDocument()
   })
 
+  it('uses Ask anything as the default placeholder', () => {
+    renderComposer()
+    expect(screen.getByTestId('chat.composer.input')).toHaveAttribute('aria-label', 'Ask anything')
+  })
+
+  it('uses a 48-point default height for descender clearance', () => {
+    renderComposer()
+    expect(screen.getByTestId('chat.composer.input')).toHaveStyle({ minHeight: 48 })
+  })
+
   it('disables Send for an empty draft', () => {
     renderComposer({ value: '', canSend: false })
     expect(screen.getByTestId('chat.composer.send')).toBeDisabled()

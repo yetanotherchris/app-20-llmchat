@@ -40,7 +40,7 @@ export interface ComposerProps {
 }
 
 const DEFAULT_MAX_HEIGHT = 160
-const DEFAULT_MIN_HEIGHT = 44
+const DEFAULT_MIN_HEIGHT = 48
 
 /**
  * react-native-web fires real DOM key events with fields beyond RN's
@@ -70,7 +70,7 @@ export function Composer({
   minHeight = DEFAULT_MIN_HEIGHT,
   blurBehavior = 'keep',
   dismissKeyboardOnSend = false,
-  placeholder = 'Message...',
+  placeholder = 'Ask anything',
   sendLabel = 'Send',
   stopLabel = 'Stop',
   renderSend,
