@@ -23,6 +23,11 @@ describe('Composer', () => {
     expect(screen.getByTestId('chat.composer.send')).toBeInTheDocument()
   })
 
+  it('uses Ask anything as the default placeholder', () => {
+    renderComposer()
+    expect(screen.getByTestId('chat.composer.input')).toHaveAttribute('aria-label', 'Ask anything')
+  })
+
   it('disables Send for an empty draft', () => {
     renderComposer({ value: '', canSend: false })
     expect(screen.getByTestId('chat.composer.send')).toBeDisabled()

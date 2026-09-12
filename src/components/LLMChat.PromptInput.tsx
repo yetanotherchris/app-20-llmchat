@@ -70,7 +70,7 @@ export function Composer({
   minHeight = DEFAULT_MIN_HEIGHT,
   blurBehavior = 'keep',
   dismissKeyboardOnSend = false,
-  placeholder = 'Message...',
+  placeholder = 'Ask anything',
   sendLabel = 'Send',
   stopLabel = 'Stop',
   renderSend,
