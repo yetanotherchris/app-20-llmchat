@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.3 (2026-09-12)
+
+- Changes the default composer placeholder to `Ask anything` and increases the default minimum composer height to 48 points.
+- Publishes through npm trusted publishing from the GitHub Actions workflow.
+
 ## 0.3.0 (2026-09-08)
 
 - Streaming and operations (spec 006): a `useChatSession` hook owns the
