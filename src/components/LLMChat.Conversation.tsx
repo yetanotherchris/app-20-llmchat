@@ -177,6 +177,7 @@ export function MessageList({
       testID="chat.message-list"
     >
       <LegendList
+        recycleItems={false}
         ref={listRef}
         data={messages}
         renderItem={renderItem}
