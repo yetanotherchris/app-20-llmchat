@@ -78,6 +78,7 @@ export interface ChatProps {
   onAtBottomChange?: (isAtBottom: boolean) => void
   onUnreadCountChange?: (count: number) => void
   onVisibleRangeChange?: (range: VisibleRange) => void
+  composerVariant?: ComposerProps['variant']
 }
 
 type StateViewKind = 'empty' | 'loading' | 'typing' | 'error' | 'none'
@@ -139,6 +140,7 @@ function ChatInner(props: ChatProps) {
     onAtBottomChange,
     onUnreadCountChange,
     onVisibleRangeChange,
+    composerVariant,
     styleOverrides,
     renderEmptyState,
     renderLoadingState,
@@ -258,6 +260,7 @@ function ChatInner(props: ChatProps) {
     capabilities,
     icons,
     styleOverrides,
+    variant: composerVariant,
   }
 
   const stateKind = stateKindFor(status, messages)
