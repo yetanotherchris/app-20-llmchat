@@ -56,6 +56,7 @@ export interface ChatProps {
   renderStop?: (props: StopButtonProps) => React.ReactElement
   renderScrollToLatest?: (props: ScrollToLatestControlProps) => React.ReactElement
   renderComposerControls?: () => React.ReactNode
+  renderAboveComposer?: () => React.ReactNode
   renderEmptyState?: () => React.ReactElement
   renderLoadingState?: () => React.ReactElement
   renderTypingState?: () => React.ReactElement
@@ -122,6 +123,7 @@ function ChatInner(props: ChatProps) {
     renderStop,
     renderScrollToLatest,
     renderComposerControls,
+    renderAboveComposer,
     messageActions,
     icons,
     disabled,
@@ -299,6 +301,7 @@ function ChatInner(props: ChatProps) {
     <View style={{ flex: 1, backgroundColor: theme.colors.background }} testID="chat.root">
       {stateView ?? <MessageList {...listProps} />}
       <ChatStatusText status={status} icons={icons} styleOverrides={styleOverrides} />
+      {renderAboveComposer?.()}
       <Composer {...composerProps} />
     </View>
   )
