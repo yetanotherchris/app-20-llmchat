@@ -153,7 +153,7 @@ export function Composer({
         controls: {
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 8,
+          gap: variant === 'ios' ? 4 : 8,
           alignSelf: variant === 'ios' ? 'flex-end' : undefined,
           height: variant === 'ios' ? 44 : undefined,
         },
