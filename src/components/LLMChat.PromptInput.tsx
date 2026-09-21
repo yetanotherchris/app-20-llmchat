@@ -37,6 +37,7 @@ export interface ComposerProps {
   capabilities?: Capabilities
   icons?: Partial<Record<'send' | 'stop', React.ReactNode>>
   styleOverrides?: SurfaceStyleOverrides
+  variant?: 'default' | 'ios'
 }
 
 const DEFAULT_MAX_HEIGHT = 160
@@ -81,6 +82,7 @@ export function Composer({
   capabilities,
   icons,
   styleOverrides,
+  variant = 'default',
 }: ComposerProps) {
   const { theme } = useTheme()
   const isTouch = useRef(isTouchTarget()).current
@@ -109,17 +111,18 @@ export function Composer({
           backgroundColor: 'transparent',
         },
         pill: {
-          flexDirection: 'row',
-          alignItems: 'center',
+          flexDirection: variant === 'ios' ? 'column' : 'row',
+          alignItems: variant === 'ios' ? 'stretch' : 'center',
           gap: 8,
           width: '100%',
           maxWidth: theme.layout.composerWidth,
           backgroundColor: theme.colors.composerSurface,
-          borderRadius: theme.radii.composerRadius,
+          borderRadius: variant === 'ios' ? 28 : theme.radii.composerRadius,
           borderWidth: 1,
           borderColor: theme.colors.composerBorder,
-          paddingHorizontal: theme.spacing.composerPaddingH,
-          paddingVertical: theme.spacing.composerPaddingV,
+          paddingHorizontal: variant === 'ios' ? 16 : theme.spacing.composerPaddingH,
+          paddingTop: variant === 'ios' ? 16 : theme.spacing.composerPaddingV,
+          paddingBottom: variant === 'ios' ? 12 : theme.spacing.composerPaddingV,
           ...(Platform.OS === 'web'
             ? { boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)' }
             : {
@@ -131,13 +134,14 @@ export function Composer({
               }),
         },
         inputWrap: {
-          flex: 1,
+          flex: variant === 'ios' ? undefined : 1,
+          width: '100%',
         },
         input: {
           minHeight,
           backgroundColor: 'transparent',
-          paddingHorizontal: 2,
-          paddingVertical: 10,
+          paddingHorizontal: variant === 'ios' ? 0 : 2,
+          paddingVertical: variant === 'ios' ? 0 : 10,
           fontSize: theme.typography.composerTextSize,
           lineHeight: theme.typography.composerLineHeight,
           color: theme.colors.text,
@@ -149,10 +153,12 @@ export function Composer({
         controls: {
           flexDirection: 'row',
           alignItems: 'center',
-          gap: 8,
+          gap: variant === 'ios' ? 4 : 8,
+          alignSelf: variant === 'ios' ? 'flex-end' : undefined,
+          height: variant === 'ios' ? 44 : undefined,
         },
       }),
-    [theme, minHeight],
+    [theme, minHeight, variant],
   )
 
   const performSubmit = useCallback(() => {

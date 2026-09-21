@@ -22,6 +22,7 @@
   ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
+    "prepare": "npm run build",
     "build:demo": "cd demo && npx vite build",
     "dev:demo": "cd demo && npx vite",
     "lint": "eslint src/",

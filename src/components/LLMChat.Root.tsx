@@ -56,6 +56,7 @@ export interface ChatProps {
   renderStop?: (props: StopButtonProps) => React.ReactElement
   renderScrollToLatest?: (props: ScrollToLatestControlProps) => React.ReactElement
   renderComposerControls?: () => React.ReactNode
+  renderAboveComposer?: () => React.ReactNode
   renderEmptyState?: () => React.ReactElement
   renderLoadingState?: () => React.ReactElement
   renderTypingState?: () => React.ReactElement
@@ -78,6 +79,7 @@ export interface ChatProps {
   onAtBottomChange?: (isAtBottom: boolean) => void
   onUnreadCountChange?: (count: number) => void
   onVisibleRangeChange?: (range: VisibleRange) => void
+  composerVariant?: ComposerProps['variant']
 }
 
 type StateViewKind = 'empty' | 'loading' | 'typing' | 'error' | 'none'
@@ -121,6 +123,7 @@ function ChatInner(props: ChatProps) {
     renderStop,
     renderScrollToLatest,
     renderComposerControls,
+    renderAboveComposer,
     messageActions,
     icons,
     disabled,
@@ -139,6 +142,7 @@ function ChatInner(props: ChatProps) {
     onAtBottomChange,
     onUnreadCountChange,
     onVisibleRangeChange,
+    composerVariant,
     styleOverrides,
     renderEmptyState,
     renderLoadingState,
@@ -258,6 +262,7 @@ function ChatInner(props: ChatProps) {
     capabilities,
     icons,
     styleOverrides,
+    variant: composerVariant,
   }
 
   const stateKind = stateKindFor(status, messages)
@@ -296,6 +301,7 @@ function ChatInner(props: ChatProps) {
     <View style={{ flex: 1, backgroundColor: theme.colors.background }} testID="chat.root">
       {stateView ?? <MessageList {...listProps} />}
       <ChatStatusText status={status} icons={icons} styleOverrides={styleOverrides} />
+      {renderAboveComposer?.()}
       <Composer {...composerProps} />
     </View>
   )
