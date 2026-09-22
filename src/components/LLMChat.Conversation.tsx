@@ -85,11 +85,13 @@ export function MessageList({
 
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
-      const { contentOffset, contentSize } = event.nativeEvent
+      const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent
+      const measuredViewportHeight = layoutMeasurement?.height ?? viewportHeight
+      if (measuredViewportHeight <= 0) return
       update({
         contentHeight: contentSize.height,
         offsetY: contentOffset.y,
-        viewportHeight,
+        viewportHeight: measuredViewportHeight,
       })
     },
     [update, viewportHeight],

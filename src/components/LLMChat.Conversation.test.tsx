@@ -16,7 +16,11 @@ vi.mock('@legendapp/list/react-native', () => ({
     renderItem: (info: { item: Message }) => React.ReactElement
     ListHeaderComponent?: React.ReactElement | null
     onScroll?: (event: {
-      nativeEvent: { contentOffset: { y: number }; contentSize: { height: number } }
+      nativeEvent: {
+        contentOffset: { y: number }
+        contentSize: { height: number }
+        layoutMeasurement: { height: number }
+      }
     }) => void
     onLayout?: (event: { nativeEvent: { layout: { height: number } } }) => void
     extraData?: unknown
@@ -32,6 +36,7 @@ vi.mock('@legendapp/list/react-native', () => ({
           nativeEvent: {
             contentOffset: { y: 500 },
             contentSize: { height: 1200 },
+            layoutMeasurement: { height: 600 },
           },
         })
       }}
