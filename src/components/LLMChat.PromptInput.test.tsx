@@ -30,7 +30,7 @@ describe('Composer', () => {
 
   it('uses a 48-point default height for descender clearance', () => {
     renderComposer()
-    expect(screen.getByTestId('chat.composer.input')).toHaveStyle({ minHeight: 48 })
+    expect(parseFloat(getComputedStyle(screen.getByTestId('chat.composer.input')).minHeight)).toBe(48)
   })
 
   it('disables Send for an empty draft', () => {
