@@ -202,10 +202,6 @@ export function Composer({
     [measureAndApply, onChangeText],
   )
 
-  const handleSubmitEditing = useCallback(() => {
-    performSubmit()
-  }, [performSubmit])
-
   const handleKeyPress = useCallback(
     (event: NativeSyntheticEvent<TextInputKeyPressEventData>) => {
       if (Platform.OS !== 'web') return
@@ -269,7 +265,6 @@ export function Composer({
             onLayout={handleLayout}
             onKeyPress={handleKeyPress}
             onBlur={handleBlur}
-            onSubmitEditing={handleSubmitEditing}
             multiline
             blurOnSubmit={false}
             placeholder={placeholder}
