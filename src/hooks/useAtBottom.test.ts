@@ -29,6 +29,7 @@ describe('useAtBottom', () => {
   it('starts at the bottom', () => {
     const { result } = renderHook(() => useAtBottom(96))
     expect(result.current.isAtBottom).toBe(true)
+    expect(result.current.isAtBottomRef.current).toBe(true)
   })
 
   it('flips off when scrolled up beyond the threshold', () => {
@@ -37,6 +38,7 @@ describe('useAtBottom', () => {
       result.current.update({ contentHeight: 1000, offsetY: 100, viewportHeight: 600 })
     })
     expect(result.current.isAtBottom).toBe(false)
+    expect(result.current.isAtBottomRef.current).toBe(false)
   })
 
   it('flips back on when back within the threshold', () => {

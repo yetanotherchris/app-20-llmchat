@@ -16,6 +16,7 @@ export function isNearBottom(metrics: ScrollMetrics, threshold: number): boolean
 
 export interface AtBottomState {
   isAtBottom: boolean
+  isAtBottomRef: React.RefObject<boolean>
   update: (metrics: ScrollMetrics) => void
 }
 
@@ -40,5 +41,5 @@ export function useAtBottom(
     [threshold],
   )
 
-  return { isAtBottom, update }
+  return { isAtBottom, isAtBottomRef, update }
 }

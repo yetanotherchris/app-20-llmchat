@@ -62,7 +62,7 @@ export function MessageList({
   const onVisibleRangeChangeRef = useRef(onVisibleRangeChange)
   onVisibleRangeChangeRef.current = onVisibleRangeChange
 
-  const { isAtBottom, update } = useAtBottom(followThreshold, onAtBottomChange)
+  const { isAtBottom, isAtBottomRef, update } = useAtBottom(followThreshold, onAtBottomChange)
   const tailKey = messages.length > 0 ? messages[messages.length - 1]?.id : undefined
   const { unreadCount, clearUnread } = useUnreadCount(isAtBottom, tailKey)
 
@@ -72,6 +72,10 @@ export function MessageList({
 
   const followFraction =
     viewportHeight > 0 ? followThreshold / viewportHeight : FALLBACK_FOLLOW_FRACTION
+
+  useEffect(() => {
+    if (isAtBottomRef.current) void listRef.current?.scrollToEnd({ animated: false })
+  }, [isAtBottomRef, tailKey])
 
   const scrollToLatest = useCallback(() => {
     void listRef.current?.scrollToEnd({ animated: false })
@@ -185,6 +189,8 @@ export function MessageList({
         extraData={renderMessage}
         onScroll={handleScroll}
         scrollEventThrottle={16}
+        keyboardDismissMode="interactive"
+        keyboardShouldPersistTaps="handled"
         onViewableItemsChanged={onViewableItemsChanged}
         viewabilityConfig={viewabilityConfig}
         initialScrollAtEnd
