@@ -48,8 +48,10 @@ export function useAutogrowHeight({
   )
 
   const handleLayout = useCallback(
-    (event: { nativeEvent: { layout: { height: number } } }) =>
-      applyContentHeight(event.nativeEvent.layout.height),
+    (event: { nativeEvent: { layout: { height: number } } }) => {
+      const layoutHeight = event.nativeEvent.layout.height
+      if (layoutHeight > contentHeightRef.current) applyContentHeight(layoutHeight)
+    },
     [applyContentHeight],
   )
 
