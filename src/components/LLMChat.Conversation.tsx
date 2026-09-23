@@ -6,9 +6,10 @@ import {
   type NativeSyntheticEvent,
   type OnViewableItemsChangedInfo,
 } from '@legendapp/list/react-native'
-import { StyleSheet, View, type LayoutChangeEvent } from 'react-native'
+import { AccessibilityInfo, StyleSheet, View, type LayoutChangeEvent } from 'react-native'
 import type { Message, VisibleRange } from '../types'
-import { useAtBottom } from '../hooks/useAtBottom'
+import { useAtBottom, type ScrollMetrics } from '../hooks/useAtBottom'
+import { useScreenReaderEnabled } from '../accessibility/useScreenReaderEnabled'
 import { useUnreadCount } from '../hooks/useUnreadCount'
 import { useTheme } from '../theme/ThemeContext'
 import { LoadEarlierControl } from './LLMChat.LoadEarlier'
@@ -22,6 +23,9 @@ export interface MessageListProps {
   isLoadingEarlier: boolean
   renderMessage: (message: Message) => React.ReactElement
   followThreshold?: number
+  scrollToLatestShowThreshold?: number
+  listTrailingPadding?: number
+  scrollToLatestAnnouncement?: string
   loadEarlierLabel?: string
   scrollToLatestLabel?: string
   messageListLabel?: string
@@ -44,6 +48,9 @@ export function MessageList({
   isLoadingEarlier,
   renderMessage,
   followThreshold = DEFAULT_FOLLOW_THRESHOLD,
+  scrollToLatestShowThreshold,
+  listTrailingPadding = 0,
+  scrollToLatestAnnouncement = 'Latest message',
   loadEarlierLabel = 'Load earlier messages',
   scrollToLatestLabel = 'Scroll to latest',
   messageListLabel = 'Message list',
@@ -62,7 +69,13 @@ export function MessageList({
   const onVisibleRangeChangeRef = useRef(onVisibleRangeChange)
   onVisibleRangeChangeRef.current = onVisibleRangeChange
 
-  const { isAtBottom, isAtBottomRef, update } = useAtBottom(followThreshold, onAtBottomChange)
+  const { isAtBottom, isAtBottomRef, showScrollToLatest, update } = useAtBottom(
+    followThreshold,
+    onAtBottomChange,
+    scrollToLatestShowThreshold,
+  )
+  const screenReaderEnabled = useScreenReaderEnabled()
+  const metricsRef = useRef<ScrollMetrics | null>(null)
   const tailKey = messages.length > 0 ? messages[messages.length - 1]?.id : undefined
   const { unreadCount, clearUnread } = useUnreadCount(isAtBottom, tailKey)
 
@@ -80,26 +93,51 @@ export function MessageList({
   const scrollToLatest = useCallback(() => {
     void listRef.current?.scrollToEnd({ animated: false })
     clearUnread()
+    if (screenReaderEnabled) AccessibilityInfo.announceForAccessibility(scrollToLatestAnnouncement)
     onScrollToLatest?.()
-  }, [clearUnread, onScrollToLatest])
+  }, [clearUnread, onScrollToLatest, screenReaderEnabled, scrollToLatestAnnouncement])
 
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
       const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent
       const measuredViewportHeight = layoutMeasurement?.height ?? viewportHeight
       if (measuredViewportHeight <= 0) return
-      update({
+      const metrics = {
         contentHeight: contentSize.height,
         offsetY: contentOffset.y,
         viewportHeight: measuredViewportHeight,
-      })
+      }
+      metricsRef.current = metrics
+      update(metrics)
     },
     [update, viewportHeight],
   )
 
-  const handleLayout = useCallback((event: LayoutChangeEvent) => {
-    setViewportHeight(event.nativeEvent.layout.height)
-  }, [])
+  const handleLayout = useCallback(
+    (event: LayoutChangeEvent) => {
+      const height = event.nativeEvent.layout.height
+      setViewportHeight(height)
+      const previous = metricsRef.current
+      if (previous) {
+        const metrics = { ...previous, viewportHeight: height }
+        metricsRef.current = metrics
+        update(metrics)
+      }
+    },
+    [update],
+  )
+
+  const handleContentSizeChange = useCallback(
+    (_width: number, height: number) => {
+      const previous = metricsRef.current
+      if (previous) {
+        const metrics = { ...previous, contentHeight: height }
+        metricsRef.current = metrics
+        update(metrics)
+      }
+    },
+    [update],
+  )
 
   const styles = useMemo(
     () =>
@@ -110,6 +148,7 @@ export function MessageList({
         },
         listContent: {
           paddingHorizontal: theme.layout.sidePadding,
+          paddingBottom: listTrailingPadding,
         },
         rowColumn: {
           width: '100%',
@@ -125,7 +164,7 @@ export function MessageList({
           gap: 8,
         },
       }),
-    [theme],
+    [theme, listTrailingPadding],
   )
 
   const renderItem = useCallback(
@@ -191,6 +230,7 @@ export function MessageList({
         extraData={renderMessage}
         onScroll={handleScroll}
         scrollEventThrottle={16}
+        onContentSizeChange={handleContentSizeChange}
         keyboardDismissMode="interactive"
         keyboardShouldPersistTaps="handled"
         onViewableItemsChanged={onViewableItemsChanged}
@@ -202,7 +242,7 @@ export function MessageList({
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={loadEarlierControl}
       />
-      {!isAtBottom && (
+      {showScrollToLatest && (
         <View style={styles.overlay}>
           {unreadCount > 0 && <UnreadBadge count={unreadCount} styleOverrides={styleOverrides} />}
           {scrollToLatestControl}

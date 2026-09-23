@@ -37,6 +37,7 @@ export interface ComposerProps {
   capabilities?: Capabilities
   icons?: Partial<Record<'send' | 'stop', React.ReactNode>>
   styleOverrides?: SurfaceStyleOverrides
+  focusRequest?: number
   variant?: 'default' | 'ios'
 }
 
@@ -82,6 +83,7 @@ export function Composer({
   capabilities,
   icons,
   styleOverrides,
+  focusRequest,
   variant = 'default',
 }: ComposerProps) {
   const { theme } = useTheme()
@@ -90,6 +92,15 @@ export function Composer({
   isBusyRef.current = isBusy
   const inputRef = useRef<TextInput | null>(null)
   const lastSubmittedRef = useRef<string | null>(null)
+  const lastFocusRequestRef = useRef(focusRequest)
+
+  // A host can request focus by changing focusRequest; the initial value does
+  // not steal focus, so a new chat still starts unfocused.
+  useEffect(() => {
+    if (focusRequest === undefined || lastFocusRequestRef.current === focusRequest) return
+    lastFocusRequestRef.current = focusRequest
+    inputRef.current?.focus()
+  }, [focusRequest])
 
   const sendEnabled = canSend && !disabled && !readOnly && capabilities?.send !== false
   const stopEnabled = isBusy && !disabled && !readOnly && capabilities?.stop !== false
