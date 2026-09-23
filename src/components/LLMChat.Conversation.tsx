@@ -63,11 +63,12 @@ export function MessageList({
   icons,
   styleOverrides,
 }: MessageListProps) {
-  const { theme } = useTheme()
+  const { theme, reducedMotion } = useTheme()
   const listRef = useRef<LegendListRef>(null)
   const [viewportHeight, setViewportHeight] = useState(0)
   const onVisibleRangeChangeRef = useRef(onVisibleRangeChange)
   onVisibleRangeChangeRef.current = onVisibleRangeChange
+  const animatedJumpRef = useRef(false)
 
   const { isAtBottom, isAtBottomRef, showScrollToLatest, update } = useAtBottom(
     followThreshold,
@@ -91,14 +92,33 @@ export function MessageList({
   }, [isAtBottomRef, tailKey])
 
   const scrollToLatest = useCallback(() => {
-    void listRef.current?.scrollToEnd({ animated: false })
+    // A nearby jump animates for about 200ms; a long jump and Reduce Motion
+    // jump immediately (FR-019).
+    const distance = metricsRef.current
+      ? Math.max(0, metricsRef.current.contentHeight - metricsRef.current.offsetY - metricsRef.current.viewportHeight)
+      : 0
+    const animate = !reducedMotion && distance > 0 && distance <= 2 * (viewportHeight || 600)
+    animatedJumpRef.current = animate
+    void listRef.current?.scrollToEnd({ animated: animate })
     clearUnread()
     if (screenReaderEnabled) AccessibilityInfo.announceForAccessibility(scrollToLatestAnnouncement)
     onScrollToLatest?.()
-  }, [clearUnread, onScrollToLatest, screenReaderEnabled, scrollToLatestAnnouncement])
+  }, [
+    clearUnread,
+    onScrollToLatest,
+    screenReaderEnabled,
+    scrollToLatestAnnouncement,
+    reducedMotion,
+    viewportHeight,
+  ])
 
   const handleScroll = useCallback(
     (event: NativeSyntheticEvent<NativeScrollEvent>) => {
+      if (animatedJumpRef.current) {
+        // A user drag during the animated jump stops it and disengages
+        // following (FR-019).
+        animatedJumpRef.current = false
+      }
       const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent
       const measuredViewportHeight = layoutMeasurement?.height ?? viewportHeight
       if (measuredViewportHeight <= 0) return

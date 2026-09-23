@@ -102,6 +102,15 @@ export function Composer({
     inputRef.current?.focus()
   }, [focusRequest])
 
+  // A host that replaces the controlled value, for example restoring a draft
+  // after a failed send, is offering a fresh submission. Clear the
+  // duplicate-submit guard so the identical text can be sent again.
+  useEffect(() => {
+    if (lastSubmittedRef.current !== null && value !== lastSubmittedRef.current) {
+      lastSubmittedRef.current = null
+    }
+  }, [value])
+
   const sendEnabled = canSend && !disabled && !readOnly && capabilities?.send !== false
   const stopEnabled = isBusy && !disabled && !readOnly && capabilities?.stop !== false
   const editable = !disabled && !readOnly
