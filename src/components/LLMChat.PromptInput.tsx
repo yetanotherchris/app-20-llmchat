@@ -115,10 +115,8 @@ export function Composer({
   const stopEnabled = isBusy && !disabled && !readOnly && capabilities?.stop !== false
   const editable = !disabled && !readOnly
 
-  const { height, handleContentSizeChange, handleLayout, handleTextChange } = useAutogrowHeight({
-    minHeight,
-    maxHeight,
-  })
+  const { height, handleContentSizeChange, handleLayout, handleTextChange, ensureMinimumHeight } =
+    useAutogrowHeight({ minHeight, maxHeight })
 
   const styles = useMemo(
     () =>
@@ -216,10 +214,13 @@ export function Composer({
       if (lastSubmittedRef.current !== null && next !== lastSubmittedRef.current) {
         lastSubmittedRef.current = null
       }
+      // Some native TextInput versions do not report a larger content size
+      // until after the next layout. Explicit line breaks must grow immediately.
+      ensureMinimumHeight(next.split('\n').length * theme.typography.composerLineHeight)
       measureAndApply()
       onChangeText(next)
     },
-    [measureAndApply, onChangeText],
+    [ensureMinimumHeight, measureAndApply, onChangeText, theme.typography.composerLineHeight],
   )
 
   const handleKeyPress = useCallback(

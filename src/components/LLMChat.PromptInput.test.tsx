@@ -126,6 +126,13 @@ describe('Composer', () => {
     expect(input).toHaveAttribute('aria-label', 'Ask anything…')
   })
 
+  it('grows for explicit newlines before native content-size measurement', () => {
+    renderComposer({ minHeight: 36, maxHeight: 242 })
+    const input = screen.getByTestId('chat.composer.input')
+    fireEvent.change(input, { target: { value: 'first line\nsecond line\nthird line' } })
+    expect(parseFloat(getComputedStyle(input).height)).toBeGreaterThan(48)
+  })
+
   it('shows a visible focus ring on Send while focused (FR-003)', () => {
     renderComposer({ value: 'hello', canSend: true })
     const send = screen.getByTestId('chat.composer.send')
