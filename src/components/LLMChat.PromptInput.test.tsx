@@ -79,6 +79,25 @@ describe('Composer', () => {
     expect(props.onSubmit).toHaveBeenCalledTimes(1)
   })
 
+  it('permits a retry after the host restores the same draft value', () => {
+    const { rerender, props } = renderComposer({ value: 'hello', canSend: true })
+    fireEvent.click(screen.getByTestId('chat.composer.send'))
+    expect(props.onSubmit).toHaveBeenCalledTimes(1)
+    // The host clears then restores the value, as on a failed send rollback.
+    rerender(<Composer {...props} value="" canSend={false} />)
+    rerender(<Composer {...props} value="hello" canSend={true} />)
+    fireEvent.click(screen.getByTestId('chat.composer.send'))
+    expect(props.onSubmit).toHaveBeenCalledTimes(2)
+  })
+
+  it('still blocks a duplicate submit when the value never changes', () => {
+    const { rerender, props } = renderComposer({ value: 'hello', canSend: true })
+    fireEvent.click(screen.getByTestId('chat.composer.send'))
+    rerender(<Composer {...props} value="hello" canSend={true} />)
+    fireEvent.click(screen.getByTestId('chat.composer.send'))
+    expect(props.onSubmit).toHaveBeenCalledTimes(1)
+  })
+
   it('does not discard the draft on re-render (controlled value preserved)', () => {
     const { rerender, props } = renderComposer({ value: 'keep me', canSend: true })
     rerender(<Composer {...props} value="keep me" canSend={true} />)
@@ -105,6 +124,13 @@ describe('Composer', () => {
     renderComposer({ placeholder: 'Ask anything…' })
     const input = screen.getByTestId('chat.composer.input')
     expect(input).toHaveAttribute('aria-label', 'Ask anything…')
+  })
+
+  it('grows for explicit newlines before native content-size measurement', () => {
+    renderComposer({ minHeight: 36, maxHeight: 242 })
+    const input = screen.getByTestId('chat.composer.input')
+    fireEvent.change(input, { target: { value: 'first line\nsecond line\nthird line' } })
+    expect(parseFloat(getComputedStyle(input).height)).toBeGreaterThan(48)
   })
 
   it('shows a visible focus ring on Send while focused (FR-003)', () => {

@@ -10,6 +10,7 @@ export interface AutogrowHeightState {
   handleContentSizeChange: (height: number) => void
   handleLayout: (event: { nativeEvent: { layout: { height: number } } }) => void
   handleTextChange: (measuredHeight?: number) => void
+  ensureMinimumHeight: (height: number) => void
 }
 
 function clamp(value: number, min: number, max: number): number {
@@ -60,5 +61,12 @@ export function useAutogrowHeight({
     [applyContentHeight],
   )
 
-  return { height, handleContentSizeChange, handleLayout, handleTextChange }
+  const ensureMinimumHeight = useCallback(
+    (next: number) => {
+      if (next > contentHeightRef.current) applyContentHeight(next)
+    },
+    [applyContentHeight],
+  )
+
+  return { height, handleContentSizeChange, handleLayout, handleTextChange, ensureMinimumHeight }
 }

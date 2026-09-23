@@ -102,14 +102,21 @@ export function Composer({
     inputRef.current?.focus()
   }, [focusRequest])
 
+  // A host that replaces the controlled value, for example restoring a draft
+  // after a failed send, is offering a fresh submission. Clear the
+  // duplicate-submit guard so the identical text can be sent again.
+  useEffect(() => {
+    if (lastSubmittedRef.current !== null && value !== lastSubmittedRef.current) {
+      lastSubmittedRef.current = null
+    }
+  }, [value])
+
   const sendEnabled = canSend && !disabled && !readOnly && capabilities?.send !== false
   const stopEnabled = isBusy && !disabled && !readOnly && capabilities?.stop !== false
   const editable = !disabled && !readOnly
 
-  const { height, handleContentSizeChange, handleLayout, handleTextChange } = useAutogrowHeight({
-    minHeight,
-    maxHeight,
-  })
+  const { height, handleContentSizeChange, handleLayout, handleTextChange, ensureMinimumHeight } =
+    useAutogrowHeight({ minHeight, maxHeight })
 
   const styles = useMemo(
     () =>
@@ -207,10 +214,13 @@ export function Composer({
       if (lastSubmittedRef.current !== null && next !== lastSubmittedRef.current) {
         lastSubmittedRef.current = null
       }
+      // Some native TextInput versions do not report a larger content size
+      // until after the next layout. Explicit line breaks must grow immediately.
+      ensureMinimumHeight(next.split('\n').length * theme.typography.composerLineHeight)
       measureAndApply()
       onChangeText(next)
     },
-    [measureAndApply, onChangeText],
+    [ensureMinimumHeight, measureAndApply, onChangeText, theme.typography.composerLineHeight],
   )
 
   const handleKeyPress = useCallback(
