@@ -67,6 +67,10 @@ export interface ChatProps {
   readOnly?: boolean
   capabilities?: Capabilities
   followThreshold?: number
+  scrollToLatestShowThreshold?: number
+  listTrailingPadding?: number
+  scrollToLatestAnnouncement?: string
+  composerFocusRequest?: number
   loadEarlierLabel?: string
   scrollToLatestLabel?: string
   sendLabel?: string
@@ -130,6 +134,10 @@ function ChatInner(props: ChatProps) {
     readOnly,
     capabilities,
     followThreshold,
+    scrollToLatestShowThreshold,
+    listTrailingPadding,
+    scrollToLatestAnnouncement,
+    composerFocusRequest,
     loadEarlierLabel,
     scrollToLatestLabel,
     sendLabel,
@@ -227,6 +235,9 @@ function ChatInner(props: ChatProps) {
     isLoadingEarlier,
     renderMessage: boundedRenderMessage,
     followThreshold,
+    scrollToLatestShowThreshold,
+    listTrailingPadding,
+    scrollToLatestAnnouncement,
     loadEarlierLabel,
     scrollToLatestLabel,
     messageListLabel,
@@ -262,6 +273,7 @@ function ChatInner(props: ChatProps) {
     capabilities,
     icons,
     styleOverrides,
+    focusRequest: composerFocusRequest,
     variant: composerVariant,
   }
 

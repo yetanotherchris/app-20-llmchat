@@ -87,6 +87,7 @@ export type { ResolvedThemeBase } from './theme/resolveTheme'
 export { lightTheme, darkTheme, baseThemes, highContrastThemes } from './theme/themes'
 export { relativeLuminance, contrastRatio } from './theme/contrast'
 export { useSystemAccessibility } from './accessibility/useSystemAccessibility'
+export { useScreenReaderEnabled } from './accessibility/useScreenReaderEnabled'
 export type {
   SystemAccessibility,
   AccessibilityOverrides,

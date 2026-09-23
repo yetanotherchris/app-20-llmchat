@@ -36,20 +36,20 @@ describe('useAutogrowHeight', () => {
     expect(result.current.height).toBe(44)
   })
 
-  it('corrects height on text change (web shrink fallback)', () => {
+  it('uses a larger layout measurement when content-size events are unavailable', () => {
+    const { result } = renderHook(() => useAutogrowHeight({ minHeight: 44, maxHeight: 160 }))
+    act(() => {
+      result.current.handleLayout({ nativeEvent: { layout: { height: 120 } } })
+    })
+    expect(result.current.height).toBe(120)
+  })
+
+  it('does not shrink after a content-size measurement', () => {
     const { result } = renderHook(() => useAutogrowHeight({ minHeight: 44, maxHeight: 160 }))
     act(() => {
       result.current.handleContentSizeChange(120)
-    })
-    expect(result.current.height).toBe(120)
-    // Simulate web shrink: content height fell but onContentSizeChange did not
-    // fire; handleTextChange re-applies the clamp from the tracked content.
-    act(() => {
       result.current.handleLayout({ nativeEvent: { layout: { height: 60 } } })
     })
-    act(() => {
-      result.current.handleTextChange()
-    })
-    expect(result.current.height).toBe(60)
+    expect(result.current.height).toBe(120)
   })
 })

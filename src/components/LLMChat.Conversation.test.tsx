@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { fireEvent, render, screen } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { AccessibilityInfo } from 'react-native'
 import { MessageList } from './LLMChat.Conversation'
 import type { Message } from '../types'
 
@@ -168,5 +169,46 @@ describe('MessageList', () => {
     fireEvent.scroll(screen.getByTestId('mock-legend-list'))
     expect(screen.getByTestId('custom-scroll')).toBeInTheDocument()
     expect(screen.queryByTestId('chat.scroll-to-latest')).not.toBeInTheDocument()
+  })
+
+  it('uses the scroll-to-latest show threshold to delay showing the control', () => {
+    render(
+      <MessageList
+        messages={messages}
+        hasEarlierMessages={false}
+        isLoadingEarlier={false}
+        renderMessage={renderMessage}
+        onLoadEarlier={() => {}}
+        followThreshold={96}
+        scrollToLatestShowThreshold={500}
+      />,
+    )
+    // The mock reports a distance of 100, which is beyond the follow threshold
+    // but below the show threshold, so the control stays hidden.
+    fireEvent.scroll(screen.getByTestId('mock-legend-list'))
+    expect(screen.queryByTestId('chat.scroll-to-latest')).not.toBeInTheDocument()
+  })
+
+  it('announces only on explicit activation when a screen reader is enabled', async () => {
+    const announce = vi.spyOn(AccessibilityInfo, 'announceForAccessibility')
+    render(
+      <MessageList
+        messages={messages}
+        hasEarlierMessages={false}
+        isLoadingEarlier={false}
+        renderMessage={renderMessage}
+        onLoadEarlier={() => {}}
+        scrollToLatestAnnouncement="Latest message"
+      />,
+    )
+    await waitFor(() => expect(AccessibilityInfo.isScreenReaderEnabled).toBeDefined())
+    expect(announce).not.toHaveBeenCalled()
+    fireEvent.scroll(screen.getByTestId('mock-legend-list'))
+    const control = await screen.findByTestId('chat.scroll-to-latest')
+    act(() => {
+      fireEvent.click(control)
+    })
+    await waitFor(() => expect(announce).toHaveBeenCalledWith('Latest message'))
+    announce.mockRestore()
   })
 })

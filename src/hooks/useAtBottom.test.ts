@@ -84,4 +84,47 @@ describe('useAtBottom', () => {
     expect(first).not.toHaveBeenCalled()
     expect(second).toHaveBeenCalledWith(false)
   })
+
+  it('exposes the inverse of isAtBottom when no show threshold is set', () => {
+    const { result } = renderHook(() => useAtBottom(96))
+    expect(result.current.showScrollToLatest).toBe(false)
+    act(() => {
+      result.current.update({ contentHeight: 1000, offsetY: 100, viewportHeight: 600 })
+    })
+    expect(result.current.showScrollToLatest).toBe(true)
+    act(() => {
+      result.current.update({ contentHeight: 1000, offsetY: 304, viewportHeight: 600 })
+    })
+    expect(result.current.showScrollToLatest).toBe(false)
+  })
+
+  it('applies show and hide hysteresis when a show threshold is set', () => {
+    const { result } = renderHook(() => useAtBottom(40, undefined, 80))
+    // distance 40 -> at bottom, hidden.
+    act(() => {
+      result.current.update({ contentHeight: 1000, offsetY: 900, viewportHeight: 60 })
+    })
+    expect(result.current.isAtBottom).toBe(true)
+    expect(result.current.showScrollToLatest).toBe(false)
+    // distance 80 -> between the thresholds, retains hidden.
+    act(() => {
+      result.current.update({ contentHeight: 1000, offsetY: 860, viewportHeight: 60 })
+    })
+    expect(result.current.showScrollToLatest).toBe(false)
+    // distance 90 -> beyond the show threshold, shown.
+    act(() => {
+      result.current.update({ contentHeight: 1000, offsetY: 850, viewportHeight: 60 })
+    })
+    expect(result.current.showScrollToLatest).toBe(true)
+    // distance 80 -> retains shown.
+    act(() => {
+      result.current.update({ contentHeight: 1000, offsetY: 860, viewportHeight: 60 })
+    })
+    expect(result.current.showScrollToLatest).toBe(true)
+    // distance 40 -> at bottom, hidden.
+    act(() => {
+      result.current.update({ contentHeight: 1000, offsetY: 900, viewportHeight: 60 })
+    })
+    expect(result.current.showScrollToLatest).toBe(false)
+  })
 })
