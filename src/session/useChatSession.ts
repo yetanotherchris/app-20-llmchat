@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ChatStatus, MessageAction } from '../theme/types'
 import type { Message, MessageStatus } from '../types'
 import type {
@@ -35,7 +35,10 @@ function findPromptFor(messages: readonly Message[], assistantMessageId: string)
 interface ActiveOperation {
   op: ChatOperation
   content: string
+  receivedReply: boolean
 }
+
+const STATUS_TRANSITION_MS = 1_000
 
 /**
  * Operation-aware controller for the shared chat component (spec 006).
@@ -50,6 +53,41 @@ export function useChatSession(options: ChatSessionOptions): ChatSession {
   const [messages, setMessages] = useState<Message[]>(messagesRef.current)
   const [status, setStatus] = useState<ChatStatus>('idle')
   const currentOpRef = useRef<ActiveOperation | null>(null)
+  const statusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clearStatusTimer = useCallback(() => {
+    if (statusTimerRef.current !== null) clearTimeout(statusTimerRef.current)
+    statusTimerRef.current = null
+  }, [])
+
+  const scheduleStatus = useCallback(
+    (opId: string, nextStatus: ChatStatus) => {
+      clearStatusTimer()
+      statusTimerRef.current = setTimeout(() => {
+        statusTimerRef.current = null
+        const current = currentOpRef.current
+        if (current && current.op.id !== opId) return
+        setStatus(nextStatus)
+      }, STATUS_TRANSITION_MS)
+    },
+    [clearStatusTimer],
+  )
+
+  const scheduleSendStatus = useCallback(
+    (opId: string) => {
+      clearStatusTimer()
+      statusTimerRef.current = setTimeout(() => {
+        statusTimerRef.current = null
+        const current = currentOpRef.current
+        if (!current || current.op.id !== opId) return
+        setStatus('sent')
+        scheduleStatus(opId, 'waiting')
+      }, STATUS_TRANSITION_MS)
+    },
+    [clearStatusTimer, scheduleStatus],
+  )
+
+  useEffect(() => clearStatusTimer, [clearStatusTimer])
 
   const setMessagesBoth = useCallback((next: readonly Message[]) => {
     messagesRef.current = [...next]
@@ -62,7 +100,7 @@ export function useChatSession(options: ChatSessionOptions): ChatSession {
   }, [])
 
   const applyToResponse = useCallback(
-    (op: ChatOperation, mutate: (message: Message) => Message, nextStatus: ChatStatus) => {
+    (op: ChatOperation, mutate: (message: Message) => Message, nextStatus?: ChatStatus) => {
       const messageExists = messagesRef.current.some((message) => message.id === op.messageId)
       if (!messageExists) return false
       setMessagesBoth(
@@ -70,7 +108,7 @@ export function useChatSession(options: ChatSessionOptions): ChatSession {
           message.id === op.messageId ? mutate(message) : message,
         ),
       )
-      setStatus(nextStatus)
+      if (nextStatus) setStatus(nextStatus)
       return true
     },
     [setMessagesBoth],
@@ -83,6 +121,8 @@ export function useChatSession(options: ChatSessionOptions): ChatSession {
       if (current.op.id !== opId || current.op.stopped) return // stale or stopped op (FR-005)
       const content = current.content + text
       current.content = content
+      const receivedFirstReply = !current.receivedReply
+      current.receivedReply = true
       applyToResponse(
         current.op,
         (message) => {
@@ -94,10 +134,11 @@ export function useChatSession(options: ChatSessionOptions): ChatSession {
           }
           return response
         },
-        'streaming',
+        receivedFirstReply ? 'replyReceived' : undefined,
       )
+      if (receivedFirstReply) scheduleStatus(opId, 'streaming')
     },
-    [applyToResponse],
+    [applyToResponse, scheduleStatus],
   )
 
   const complete = useCallback(
@@ -105,13 +146,19 @@ export function useChatSession(options: ChatSessionOptions): ChatSession {
       const current = currentOpRef.current
       if (!current || current.op.id !== opId || current.op.stopped) return
       currentOpRef.current = null
+      clearStatusTimer()
       applyToResponse(
         current.op,
         (message) => ({ ...message, status: 'complete' as const }),
-        'idle',
       )
+      if (current.receivedReply) {
+        setStatus('replyReceived')
+        scheduleStatus(opId, 'idle')
+      } else {
+        setStatus('idle')
+      }
     },
-    [applyToResponse],
+    [applyToResponse, clearStatusTimer, scheduleStatus],
   )
 
   const fail = useCallback(
@@ -119,12 +166,13 @@ export function useChatSession(options: ChatSessionOptions): ChatSession {
       const current = currentOpRef.current
       if (!current || current.op.id !== opId || current.op.stopped) return
       currentOpRef.current = null
+      clearStatusTimer()
       // Message-level failure: partial content is retained and the chat stays
       // usable (spec 006 clarification); the conversation-level error status is
       // host-set and renders the spec 005 ErrorState.
       applyToResponse(current.op, (message) => ({ ...message, status: 'error' as const }), 'idle')
     },
-    [applyToResponse],
+    [applyToResponse, clearStatusTimer],
   )
 
   const stop = useCallback(() => {
@@ -132,14 +180,15 @@ export function useChatSession(options: ChatSessionOptions): ChatSession {
     if (!current || current.op.stopped) return // FR-006: second Stop is a no-op
     current.op.stopped = true
     currentOpRef.current = null
+    clearStatusTimer()
     // The transport's controls still read `op.stopped` on the same object, so
     // `stopRequested()` keeps returning true after the op is cleared.
     applyToResponse(current.op, (message) => ({ ...message, status: 'stopped' as const }), 'idle')
-  }, [applyToResponse])
+  }, [applyToResponse, clearStatusTimer])
 
   const startOperation = useCallback(
     (op: ChatOperation) => {
-      currentOpRef.current = { op, content: '' }
+      currentOpRef.current = { op, content: '', receivedReply: false }
       const controls: ChatSessionControls = {
         appendChunk: (text) => appendChunk(op.id, text),
         complete: () => complete(op.id),
@@ -150,6 +199,7 @@ export function useChatSession(options: ChatSessionOptions): ChatSession {
       // leaving it stuck in `sending` (dropped-connection edge case).
       try {
         const result = request(op, controls)
+        scheduleSendStatus(op.id)
         if (result && typeof result.then === 'function') {
           void result.then(undefined, () => fail(op.id))
         }
@@ -157,7 +207,7 @@ export function useChatSession(options: ChatSessionOptions): ChatSession {
         fail(op.id)
       }
     },
-    [appendChunk, complete, fail, request],
+    [appendChunk, complete, fail, request, scheduleSendStatus],
   )
 
   const submit = useCallback(
@@ -186,7 +236,7 @@ export function useChatSession(options: ChatSessionOptions): ChatSession {
         stopped: false,
       }
       setMessagesBoth([...messagesRef.current, userMessage, responseMessage])
-      setStatus('submitting')
+      setStatus('sending')
       startOperation(op)
     },
     [hasInFlightOp, setMessagesBoth, setStatus, startOperation],
@@ -216,7 +266,7 @@ export function useChatSession(options: ChatSessionOptions): ChatSession {
             : message,
         ),
       )
-      setStatus('submitting')
+      setStatus('sending')
       startOperation(op)
     },
     [hasInFlightOp, setMessagesBoth, setStatus, startOperation],
@@ -243,10 +293,11 @@ export function useChatSession(options: ChatSessionOptions): ChatSession {
   const replaceMessages = useCallback(
     (next: readonly Message[]) => {
       currentOpRef.current = null
+      clearStatusTimer()
       setMessagesBoth(next)
       setStatus('idle')
     },
-    [setMessagesBoth],
+    [clearStatusTimer, setMessagesBoth],
   )
 
   const messageActions = useMemo<readonly MessageAction[]>(

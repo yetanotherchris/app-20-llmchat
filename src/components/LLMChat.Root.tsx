@@ -95,8 +95,10 @@ function stateKindFor(status: ChatStatus, messages: readonly Message[]): StateVi
   // Empty/loading/typing states occupy the list only while there is nothing
   // to show; once messages exist the list renders normally (US3 scenarios).
   if (messages.length === 0) {
-    if (status === 'submitting') return 'loading'
-    if (status === 'streaming') return 'typing'
+    if (status === 'submitting' || status === 'sending' || status === 'sent' || status === 'waiting') {
+      return 'loading'
+    }
+    if (status === 'replyReceived' || status === 'streaming') return 'typing'
     return 'empty'
   }
   return 'none'
@@ -254,7 +256,14 @@ function ChatInner(props: ChatProps) {
   const composerProps: ComposerProps = {
     value: draft,
     canSend: draft.trim().length > 0,
-    isBusy: status === 'submitting' || status === 'streaming' || status === 'stopping',
+    isBusy:
+      status === 'submitting' ||
+      status === 'sending' ||
+      status === 'sent' ||
+      status === 'waiting' ||
+      status === 'replyReceived' ||
+      status === 'streaming' ||
+      status === 'stopping',
     onChangeText: onChangeDraft,
     onSubmit,
     onStop,

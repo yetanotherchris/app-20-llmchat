@@ -124,7 +124,16 @@ export type IconName =
   | 'stopped'
   | 'error'
 
-export type ChatStatus = 'idle' | 'submitting' | 'streaming' | 'stopping' | 'error'
+export type ChatStatus =
+  | 'idle'
+  | 'submitting'
+  | 'sending'
+  | 'sent'
+  | 'waiting'
+  | 'replyReceived'
+  | 'streaming'
+  | 'stopping'
+  | 'error'
 
 export type CapabilityName = 'send' | 'stop' | 'copy' | 'actions'
 

@@ -16,6 +16,10 @@ export const MESSAGE_STATUS_PRESENTATION: Partial<Record<MessageStatus, StatusPr
 
 export const CHAT_STATUS_PRESENTATION: Partial<Record<ChatStatus, StatusPresentation>> = {
   submitting: { label: 'Submitting…', icon: 'sending' },
+  sending: { label: 'Sending…', icon: 'sending' },
+  sent: { label: 'Sent', icon: 'sending' },
+  waiting: { label: 'Waiting for reply…', icon: 'sending' },
+  replyReceived: { label: 'Reply received', icon: 'streaming' },
   streaming: { label: 'Streaming…', icon: 'streaming' },
   stopping: { label: 'Stopping…', icon: 'stopped' },
   error: { label: 'Error', icon: 'error' },
