@@ -29,5 +29,8 @@ jobs:
             echo "Tag must use vX.Y.Z format. Received: $GITHUB_REF_NAME"
             exit 1
           fi
-          npm version "$VERSION" --no-git-tag-version --ignore-scripts
+          CURRENT_VERSION="$(node -p "require('./package.json').version")"
+          if [[ "$CURRENT_VERSION" != "$VERSION" ]]; then
+            npm version "$VERSION" --no-git-tag-version --ignore-scripts
+          fi
       - run: npm publish --access public
