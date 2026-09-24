@@ -15,6 +15,17 @@ describe('ChatStatusText', () => {
     expect(screen.getByText('↑')).toBeInTheDocument()
   })
 
+  it.each([
+    ['sending', 'Sending…'],
+    ['sent', 'Sent'],
+    ['waiting', 'Waiting for reply…'],
+    ['replyReceived', 'Reply received'],
+  ] as const)('labels a %s chat', (status, label) => {
+    render(<ChatStatusText status={status} />)
+    expect(screen.getByTestId(`chat.status.${status}`)).toBeInTheDocument()
+    expect(screen.getByText(label)).toBeInTheDocument()
+  })
+
   it('labels a streaming chat', () => {
     render(<ChatStatusText status="streaming" />)
     expect(screen.getByTestId('chat.status.streaming')).toBeInTheDocument()

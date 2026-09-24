@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { act, renderHook } from '@testing-library/react'
 import { useChatSession } from './useChatSession'
 import type { ChatOperation, ChatSession, ChatSessionControls } from './types'
@@ -24,6 +24,9 @@ function last(session: ChatSession) {
 }
 
 describe('useChatSession: streaming (US1)', () => {
+  beforeEach(() => vi.useFakeTimers())
+  afterEach(() => vi.useRealTimers())
+
   it('submit appends the user message and a sending assistant placeholder', () => {
     const { session, request } = renderSession()
     act(() => session().submit('hello'))
@@ -32,8 +35,32 @@ describe('useChatSession: streaming (US1)', () => {
     expect(session().messages[0]?.status).toBe('complete')
     expect(session().messages[1]?.role).toBe('assistant')
     expect(session().messages[1]?.status).toBe('sending')
-    expect(session().status).toBe('submitting')
+    expect(session().status).toBe('sending')
     expect(request).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows sending, sent, waiting, and reply-received states for one second each', () => {
+    const { session, captured } = renderSession()
+    act(() => session().submit('hello'))
+    expect(session().status).toBe('sending')
+
+    act(() => vi.advanceTimersByTime(1_000))
+    expect(session().status).toBe('sent')
+
+    act(() => vi.advanceTimersByTime(1_000))
+    expect(session().status).toBe('waiting')
+
+    act(() => captured()?.controls.appendChunk('Hello'))
+    expect(session().status).toBe('replyReceived')
+
+    act(() => vi.advanceTimersByTime(1_000))
+    expect(session().status).toBe('streaming')
+
+    act(() => captured()?.controls.complete())
+    expect(session().status).toBe('replyReceived')
+
+    act(() => vi.advanceTimersByTime(1_000))
+    expect(session().status).toBe('idle')
   })
 
   it('chunks appear incrementally and flip the response to streaming', () => {
@@ -42,7 +69,7 @@ describe('useChatSession: streaming (US1)', () => {
     act(() => captured()?.controls.appendChunk('Hello'))
     expect(last(session()).status).toBe('streaming')
     expect(last(session()).contentParts[0]?.text).toBe('Hello')
-    expect(session().status).toBe('streaming')
+    expect(session().status).toBe('replyReceived')
     act(() => captured()?.controls.appendChunk(' world'))
     expect(last(session()).contentParts[0]?.text).toBe('Hello world')
   })
@@ -62,6 +89,8 @@ describe('useChatSession: streaming (US1)', () => {
       captured()?.controls.complete()
     })
     expect(last(session()).status).toBe('complete')
+    expect(session().status).toBe('replyReceived')
+    act(() => vi.advanceTimersByTime(1_000))
     expect(session().status).toBe('idle')
   })
 
